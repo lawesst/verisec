@@ -1,0 +1,14 @@
+{
+  "name": "verisec",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "contracts"
+  ],
+  "scripts": {
+    "build": "echo \"TODO: wire build\"",
+    "dev": "echo \"TODO: wire dev\"",
+    "test": "echo \"TODO: wire tests\""
+  }
+}
