@@ -8,6 +8,7 @@
     "dev": "tsx src/index.ts",
     "preseed": "npm run build -w @verisec/schema",
     "seed": "tsx src/seed.ts",
+    "seed:all": "tsx src/seed.ts --all",
     "build": "tsc -p tsconfig.json"
   },
   "dependencies": {

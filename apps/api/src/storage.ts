@@ -146,7 +146,10 @@ export async function listAudits(
     return { items: [], total };
   }
 
-  const [rows] = await pool.execute(
+  const limit = sanitizeLimit(options.limit, 200, 20);
+  const offset = sanitizeOffset(options.offset, 10_000);
+
+  const [rows] = await pool.query(
     `SELECT
         audit_id,
         project_name,
@@ -156,9 +159,8 @@ export async function listAudits(
         created_at
      FROM audits
      ORDER BY report_date DESC, created_at DESC
-     LIMIT ?
-     OFFSET ?`,
-    [options.limit, options.offset]
+     LIMIT ${limit}
+     OFFSET ${offset}`
   );
 
   const items = Array.isArray(rows)
@@ -186,7 +188,10 @@ export async function listFindings(
     return { items: [], total };
   }
 
-  const [rows] = await pool.execute(
+  const limit = sanitizeLimit(options.limit, 200, 50);
+  const offset = sanitizeOffset(options.offset, 10_000);
+
+  const [rows] = await pool.query(
     `SELECT
         finding_id,
         title,
@@ -206,9 +211,9 @@ export async function listFindings(
      FROM audit_findings
      WHERE audit_id = ?
      ORDER BY finding_id ASC
-     LIMIT ?
-     OFFSET ?`,
-    [auditId, options.limit, options.offset]
+     LIMIT ${limit}
+     OFFSET ${offset}`,
+    [auditId]
   );
 
   const items = Array.isArray(rows)
@@ -307,6 +312,20 @@ function parseJson<T>(value: unknown): T | undefined {
     }
   }
   return value as T;
+}
+
+function sanitizeLimit(value: number, max: number, fallback: number) {
+  if (!Number.isFinite(value)) {
+    return fallback;
+  }
+  return Math.max(1, Math.min(max, Math.floor(value)));
+}
+
+function sanitizeOffset(value: number, max: number) {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+  return Math.max(0, Math.min(max, Math.floor(value)));
 }
 
 function toMysqlDateTime(value?: string) {

@@ -20,6 +20,7 @@ VeriSec is a security data oracle that converts smart contract audit reports int
 - Apply the schema in `apps/api/db/schema.sql`.
 - Configure environment variables using `apps/api/.env.example`.
 - API auto-runs migrations on boot by default (`DB_AUTO_MIGRATE=true`).
+- API port defaults to `3000` but can be overridden with `PORT`.
 
 ## Seed Data
 - `npm run seed` in `apps/api` will load `apps/api/fixtures/sample-audit.json`.
