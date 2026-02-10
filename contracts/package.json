@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {
     "build": "hardhat compile",
-    "test": "hardhat test"
+    "test": "hardhat test",
+    "deploy:sepolia": "hardhat run --network arbitrumSepolia scripts/deploy.ts",
+    "deploy:arb": "hardhat run --network arbitrumOne scripts/deploy.ts"
   },
   "devDependencies": {
     "hardhat": "^2.19.0",

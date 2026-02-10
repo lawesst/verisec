@@ -7,9 +7,13 @@ import {
   getAuditRaw,
   listFindings,
   auditExists,
-  listAudits
+  listAudits,
+  insertAnchor,
+  listAnchors
 } from "./storage.js";
 import { runMigrations } from "./migrate.js";
+import { buildProofForFinding, computeMerkleRoot } from "./proofs.js";
+import { anchorAuditOnChain } from "./anchor.js";
 
 const app = Fastify({ logger: true });
 
@@ -95,9 +99,82 @@ app.get("/v1/audits/:auditId/findings", async (request, reply) => {
   };
 });
 
-app.get("/v1/audits/:auditId/findings/:findingId/proof", async (request) => {
+app.get("/v1/audits/:auditId/findings/:findingId/proof", async (request, reply) => {
   const { auditId, findingId } = request.params as { auditId: string; findingId: string };
-  return { auditId, findingId, proof: [] };
+  const audit = await getAuditRaw(auditId);
+
+  if (!audit) {
+    return reply.code(404).send({ error: "not_found" });
+  }
+
+  const proof = buildProofForFinding(audit, findingId);
+  if (!proof) {
+    return reply.code(404).send({ error: "finding_not_found" });
+  }
+
+  return proof;
+});
+
+app.post("/v1/audits/:auditId/anchor", async (request, reply) => {
+  const { auditId } = request.params as { auditId: string };
+  const { uri } = (request.body as { uri?: string }) ?? {};
+
+  const audit = await getAuditRaw(auditId);
+  if (!audit) {
+    return reply.code(404).send({ error: "not_found" });
+  }
+
+  const rpcUrl = process.env.ANCHOR_RPC_URL;
+  const privateKey = process.env.ANCHOR_PRIVATE_KEY;
+  const contractAddress = process.env.ANCHOR_CONTRACT_ADDRESS;
+  const chainId = process.env.ANCHOR_CHAIN_ID
+    ? Number(process.env.ANCHOR_CHAIN_ID)
+    : undefined;
+
+  if (!rpcUrl || !privateKey || !contractAddress) {
+    return reply.code(400).send({
+      error: "anchor_config_missing",
+      missing: [
+        !rpcUrl ? "ANCHOR_RPC_URL" : null,
+        !privateKey ? "ANCHOR_PRIVATE_KEY" : null,
+        !contractAddress ? "ANCHOR_CONTRACT_ADDRESS" : null
+      ].filter(Boolean)
+    });
+  }
+
+  const merkleRoot = computeMerkleRoot(audit);
+  const finalUri = uri ?? audit.artifacts?.reportUrl ?? "";
+
+  const tx = await anchorAuditOnChain(
+    { rpcUrl, privateKey, contractAddress, chainId },
+    auditId,
+    merkleRoot,
+    finalUri
+  );
+
+  await insertAnchor({
+    auditId,
+    chainId: tx.chainId,
+    contractAddress: tx.contractAddress,
+    merkleRoot: tx.merkleRoot,
+    txHash: tx.txHash,
+    uri: tx.uri,
+    anchoredAt: tx.blockTimestamp ? new Date(tx.blockTimestamp * 1000).toISOString() : undefined
+  });
+
+  return tx;
+});
+
+app.get("/v1/audits/:auditId/anchors", async (request, reply) => {
+  const { auditId } = request.params as { auditId: string };
+  const audit = await getAuditRaw(auditId);
+
+  if (!audit) {
+    return reply.code(404).send({ error: "not_found" });
+  }
+
+  const anchors = await listAnchors(auditId);
+  return { auditId, items: anchors };
 });
 
 const start = async () => {

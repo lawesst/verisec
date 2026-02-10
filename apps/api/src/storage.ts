@@ -20,6 +20,16 @@ export interface AuditListItem {
   createdAt?: string;
 }
 
+export interface AnchorRecord {
+  auditId: string;
+  chainId: number;
+  contractAddress: string;
+  merkleRoot: string;
+  txHash: string;
+  uri?: string;
+  anchoredAt?: string;
+}
+
 export async function insertAudit(report: AuditReport): Promise<{ exists: boolean }> {
   const connection = await pool.getConnection();
 
@@ -223,6 +233,61 @@ export async function listFindings(
   return { items, total };
 }
 
+export async function insertAnchor(record: AnchorRecord) {
+  await pool.execute(
+    `INSERT INTO audit_anchors (
+      audit_id,
+      chain_id,
+      contract_address,
+      merkle_root,
+      tx_hash,
+      uri,
+      anchored_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [
+      record.auditId,
+      record.chainId,
+      record.contractAddress,
+      record.merkleRoot,
+      record.txHash,
+      record.uri ?? null,
+      toMysqlDateTime(record.anchoredAt)
+    ]
+  );
+}
+
+export async function listAnchors(auditId: string): Promise<AnchorRecord[]> {
+  const [rows] = await pool.execute(
+    `SELECT
+        audit_id,
+        chain_id,
+        contract_address,
+        merkle_root,
+        tx_hash,
+        uri,
+        anchored_at
+     FROM audit_anchors
+     WHERE audit_id = ?
+     ORDER BY created_at DESC`,
+    [auditId]
+  );
+
+  if (!Array.isArray(rows)) {
+    return [];
+  }
+
+  return rows.map((row) => ({
+    auditId: String((row as Record<string, unknown>).audit_id),
+    chainId: Number((row as Record<string, unknown>).chain_id),
+    contractAddress: String((row as Record<string, unknown>).contract_address),
+    merkleRoot: String((row as Record<string, unknown>).merkle_root),
+    txHash: String((row as Record<string, unknown>).tx_hash),
+    uri: (row as Record<string, unknown>).uri
+      ? String((row as Record<string, unknown>).uri)
+      : undefined,
+    anchoredAt: toIsoDateTime((row as Record<string, unknown>).anchored_at)
+  }));
+}
 async function insertFinding(
   connection: Awaited<ReturnType<typeof pool.getConnection>>,
   auditId: string,

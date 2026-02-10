@@ -29,5 +29,18 @@ VeriSec is a security data oracle that converts smart contract audit reports int
 - Configure `apps/web/.env.example` if the API runs on a non-default host.
 - UI reads live data from `/v1/audits` and `/v1/audits/:auditId`.
 
+## On-Chain Anchor (M2)
+- Deploy the `SecurityAnchor` contract from `contracts`:
+  - Configure `contracts/.env.example`.
+  - Run `npm run deploy:sepolia` or `npm run deploy:arb` in `contracts`.
+- Configure API anchor env vars in `apps/api/.env.example`:
+  - `ANCHOR_RPC_URL`
+  - `ANCHOR_PRIVATE_KEY`
+  - `ANCHOR_CONTRACT_ADDRESS`
+  - `ANCHOR_CHAIN_ID`
+- Anchor a report via API:
+  - `POST /v1/audits/:auditId/anchor` with optional `{ "uri": "..." }`
+  - `GET /v1/audits/:auditId/anchors` to list anchors
+
 ## Status
 This repo is an MVP scaffold. Next steps are to finalize the schema, wire ingestion storage, and anchor proofs on Arbitrum.
