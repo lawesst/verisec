@@ -110,6 +110,10 @@ export async function insertAudit(report: AuditReport): Promise<{ exists: boolea
   }
 }
 
+export async function deleteAudit(auditId: string): Promise<void> {
+  await pool.execute("DELETE FROM audits WHERE audit_id = ?", [auditId]);
+}
+
 export async function getAuditRaw(auditId: string): Promise<AuditReport | null> {
   const [rows] = await pool.execute(
     "SELECT raw_json FROM audits WHERE audit_id = ? LIMIT 1",

@@ -8,10 +8,14 @@
 ## Schema File
 - `packages/schema/schema/v1/audit.schema.json`
 
-## Leaf Canonicalization (Draft)
-1. Sort findings by `id` ascending.
-2. For each finding, serialize a canonical JSON object with stable key ordering.
-3. Hash each serialized finding using `keccak256`.
-4. Build a Merkle tree with pairwise hashing (sorted pairs) to derive the root.
-
-This is a draft and will be finalized alongside the proof utilities.
+## Leaf Canonicalization
+1. Sort findings by `id` ascending (string compare).
+2. Canonical JSON serialization:
+   - Remove `undefined` fields.
+   - Recursively sort object keys lexicographically.
+   - Preserve array order.
+3. Leaf hash = `keccak256(utf8(canonical_json))`.
+4. Merkle tree:
+   - Pairwise hashing with sorted pairs (lexicographic by hex).
+   - If odd number of leaves, duplicate the last leaf.
+   - Parent hash = `keccak256(concat(sorted(left, right)))`.

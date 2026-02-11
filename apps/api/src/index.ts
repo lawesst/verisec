@@ -1,3 +1,4 @@
+import "./env.js";
 import Fastify from "fastify";
 import type { AuditReport } from "@verisec/schema";
 import { AuditSchemaId } from "@verisec/schema";

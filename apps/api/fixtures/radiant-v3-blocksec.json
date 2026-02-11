@@ -13,7 +13,7 @@
   "reportDate": "2026-02-09",
   "network": "arbitrum",
   "artifacts": {
-    "reportUrl": "https://docs.radiant.capital/radiant/contracts-and-security/audits/v3-audits"
+    "reportUrl": "https://content.gitbook.com/content/c8CwAEN8ihh81y90gyG1/blobs/F8mxUFKIUDpLcvgmV545/Radiant%20UniswapV3%20Helpers%20-%20BlockSec.pdf"
   },
   "findings": [
     { "id": "RB-01", "title": "Incorrect use of scaling factor", "severity": "low", "status": "resolved" },
@@ -29,7 +29,7 @@
     { "id": "RB-N3", "title": "Remove unused variables", "severity": "info", "status": "accepted" }
   ],
   "metadata": {
-    "source": "docs.radiant.capital",
+    "source": "https://docs.radiant.capital/radiant/contracts-and-security/audits/v3-audits",
     "reportTitle": "BlockSec - Radiant V3 Core and DLP Smart Contract Audit Report",
     "reportDateNote": "Report date not present in PDF text extraction"
   }

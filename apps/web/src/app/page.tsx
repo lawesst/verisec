@@ -73,6 +73,23 @@ function formatDate(value?: string) {
   });
 }
 
+function normalizeUrl(raw?: unknown): string | null {
+  if (typeof raw !== "string") {
+    return null;
+  }
+  const trimmed = raw.trim();
+  if (!trimmed) {
+    return null;
+  }
+  if (/^https?:\/\//i.test(trimmed)) {
+    return trimmed;
+  }
+  if (trimmed.includes(".")) {
+    return `https://${trimmed}`;
+  }
+  return null;
+}
+
 export default async function Page({
   searchParams
 }: {
@@ -109,6 +126,12 @@ export default async function Page({
       apiStatus = "offline";
     }
   }
+
+  const metadataSource =
+    audit && typeof audit.metadata === "object" && audit.metadata
+      ? (audit.metadata as Record<string, unknown>).source
+      : undefined;
+  const sourceUrl = normalizeUrl(metadataSource) ?? normalizeUrl(audit?.project.repository);
 
   const findingsItems = findings?.items ?? [];
   const totalFindings = findings?.pagination.total ?? 0;
@@ -185,7 +208,7 @@ export default async function Page({
                       className={item.auditId === selectedAuditId ? "active" : undefined}
                     >
                       <td>
-                        <a href={`/?audit=${item.auditId}`}>{item.auditId}</a>
+                        <a href={`/?audit=${item.auditId}#active-audit`}>{item.auditId}</a>
                       </td>
                       <td>{item.projectName}</td>
                       <td>{item.auditorName}</td>
@@ -199,7 +222,11 @@ export default async function Page({
           )}
         </section>
 
-        <section className="section reveal" style={{ animationDelay: "0.2s" }}>
+        <section
+          className="section reveal"
+          style={{ animationDelay: "0.2s" }}
+          id="active-audit"
+        >
           <h2>Active audit</h2>
           {audit ? (
             <div className="grid-2">
@@ -224,6 +251,30 @@ export default async function Page({
                   <span>Network</span>
                   <strong>{audit.network ?? "—"}</strong>
                 </div>
+                {audit.artifacts?.reportUrl || sourceUrl ? (
+                  <div className="actions" style={{ marginTop: "16px" }}>
+                    {audit.artifacts?.reportUrl ? (
+                      <a
+                        className="button primary"
+                        href={audit.artifacts.reportUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        View report
+                      </a>
+                    ) : null}
+                    {sourceUrl ? (
+                      <a
+                        className="button secondary"
+                        href={sourceUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        View source
+                      </a>
+                    ) : null}
+                  </div>
+                ) : null}
               </div>
               <div className="codeblock">
                 {`Proof endpoint\nGET /v1/audits/${audit.auditId}/findings/${

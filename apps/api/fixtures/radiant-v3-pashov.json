@@ -12,7 +12,7 @@
   "reportDate": "2026-02-09",
   "network": "arbitrum",
   "artifacts": {
-    "reportUrl": "https://docs.radiant.capital/radiant/contracts-and-security/audits/v3-audits"
+    "reportUrl": "https://content.gitbook.com/content/c8CwAEN8ihh81y90gyG1/blobs/Yhgm3h0qq6vtZ4l707Rc/Radiant%20Security%20Review%20-%20Pashov%20Audit%20Group.pdf"
   },
   "findings": [
     { "id": "RP-01", "title": "Missing state updates in case of fee-on-transfer" , "severity": "high", "status": "resolved" },
@@ -21,7 +21,7 @@
     { "id": "RP-04", "title": "Unsafe use of ERC20 functions" , "severity": "medium", "status": "resolved" }
   ],
   "metadata": {
-    "source": "docs.radiant.capital",
+    "source": "https://docs.radiant.capital/radiant/contracts-and-security/audits/v3-audits",
     "reportTitle": "Pashov Audit Group - Radiant V3 Core and DLP Smart Contract Audit Report",
     "reportDateNote": "Report date not present in PDF text extraction"
   }

@@ -14,7 +14,7 @@
   "reportDate": "2022-11-14",
   "network": "arbitrum",
   "artifacts": {
-    "reportUrl": "https://paladinsec.co/assets/audits/20221114_Paladin_Camelot_Nitro_and_Presale_Final_Report.pdf"
+    "reportUrl": "https://paladinsec.co/assets/audits/20221114_Paladin_CamelotNitro%26Presale_Final_Report.pdf"
   },
   "findings": [
     {
@@ -133,6 +133,6 @@
     }
   ],
   "metadata": {
-    "source": "paladinsec.co"
+    "source": "https://docs.camelot.exchange/references/audits"
   }
 }

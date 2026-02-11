@@ -13,7 +13,7 @@
   "reportDate": "2026-02-09",
   "network": "arbitrum",
   "artifacts": {
-    "reportUrl": "https://files.gitbook.com/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FYyI5pdV4r7V1MpDDNJRp%2Fuploads%2FoO89JKJEqrQGkeUaVMi3%2FBailSec%20-%20Camelot%20-%20Router%20Final%20Report.pdf?alt=media&token=8e4fdbdb-44fa-4a95-b7f0-8a62e58211a6"
+    "reportUrl": "https://3420642431-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FHBFQDThxW7Uo7iHfOHG5%2Fuploads%2F9j3dl3dZsks2vhewdozh%2FBailsec%20-%20Camelot%20-%20Router%20-%20Final%20Report.pdf?alt=media&token=c8dd543e-ed96-463f-80ff-a3026377b6fa"
   },
   "findings": [
     { "id": "CBR-01", "title": "Use of SafeMath in Solidity 0.8 or later", "severity": "info", "status": "open" },
@@ -50,7 +50,7 @@
     { "id": "CBR-32", "title": "Presale token can be transferred without transferFrom", "severity": "high", "status": "open" }
   ],
   "metadata": {
-    "source": "files.gitbook.com",
+    "source": "https://docs.camelot.exchange/references/audits",
     "reportDateNote": "Report date not present in PDF text extraction"
   }
 }

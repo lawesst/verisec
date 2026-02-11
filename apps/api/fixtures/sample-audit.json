@@ -22,7 +22,7 @@
   "network": "arbitrum",
   "artifacts": {
     "ipfsCid": "bafybeigdyrztwte6y6c2b6e7v3k3k5k6y7u7r7u",
-    "reportUrl": "https://example.com/audit.pdf"
+    "reportUrl": "https://paladinsec.co/assets/audits/20221114_Paladin_CamelotNitro%26Presale_Final_Report.pdf"
   },
   "findings": [
     {
