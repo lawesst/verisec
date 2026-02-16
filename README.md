@@ -89,8 +89,12 @@ Open:
 
 ## Main API Routes
 
+- `POST /v1/auditors`
+- `GET /v1/auditors`
+- `GET /v1/auditors/:address`
 - `GET /v1/audits`
 - `POST /v1/audits`
+- `POST /v1/submissions`
 - `GET /v1/audits/:auditId`
 - `GET /v1/audits/:auditId/findings`
 - `GET /v1/audits/:auditId/findings/:findingId/proof`

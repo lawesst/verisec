@@ -1,4 +1,3 @@
-import Ajv from "ajv";
 import type { ValidateFunction } from "ajv";
 import addFormats from "ajv-formats";
 import { readFile } from "node:fs/promises";
@@ -18,7 +17,8 @@ async function buildAuditValidator(): Promise<ValidateFunction> {
   const raw = await readFile(schemaUrl, "utf-8");
   const schema = JSON.parse(raw);
 
-  const ajv = new (Ajv as any)({ allErrors: true, strict: false });
+  const { default: Ajv2020 } = await import("ajv/dist/2020.js");
+  const ajv = new (Ajv2020 as any)({ allErrors: true, strict: false });
   (addFormats as any)(ajv);
 
   return ajv.compile(schema) as ValidateFunction;

@@ -30,6 +30,22 @@ export interface AnchorRecord {
   anchoredAt?: string;
 }
 
+export interface AuditorRecord {
+  address: string;
+  name: string;
+  website?: string;
+  identity?: string;
+  publicKey?: string;
+  active: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ListAuditorsOptions {
+  limit: number;
+  offset: number;
+}
+
 export async function insertAudit(report: AuditReport): Promise<{ exists: boolean }> {
   const connection = await pool.getConnection();
 
@@ -292,6 +308,105 @@ export async function listAnchors(auditId: string): Promise<AnchorRecord[]> {
     anchoredAt: toIsoDateTime((row as Record<string, unknown>).anchored_at)
   }));
 }
+
+export async function upsertAuditor(record: AuditorRecord): Promise<AuditorRecord> {
+  await pool.execute(
+    `INSERT INTO auditors (
+      address,
+      name,
+      website,
+      identity,
+      public_key,
+      active
+    ) VALUES (?, ?, ?, ?, ?, ?)
+    ON DUPLICATE KEY UPDATE
+      name = VALUES(name),
+      website = VALUES(website),
+      identity = VALUES(identity),
+      public_key = VALUES(public_key),
+      active = VALUES(active)`,
+    [
+      record.address,
+      record.name,
+      record.website ?? null,
+      record.identity ?? null,
+      record.publicKey ?? null,
+      record.active ? 1 : 0
+    ]
+  );
+
+  const stored = await getAuditorByAddress(record.address);
+  if (!stored) {
+    throw new Error("failed_to_persist_auditor");
+  }
+  return stored;
+}
+
+export async function getAuditorByAddress(address: string): Promise<AuditorRecord | null> {
+  const [rows] = await pool.execute(
+    `SELECT
+      address,
+      name,
+      website,
+      identity,
+      public_key,
+      active,
+      created_at,
+      updated_at
+    FROM auditors
+    WHERE address = ?
+    LIMIT 1`,
+    [address]
+  );
+
+  if (!Array.isArray(rows) || rows.length === 0) {
+    return null;
+  }
+
+  return mapAuditorRecord(rows[0] as Record<string, unknown>);
+}
+
+export async function listAuditors(
+  options: ListAuditorsOptions
+): Promise<{ items: AuditorRecord[]; total: number }> {
+  const [countRows] = await pool.execute("SELECT COUNT(*) as total FROM auditors");
+  const total =
+    Array.isArray(countRows) && countRows.length > 0
+      ? Number((countRows[0] as { total: string | number }).total)
+      : 0;
+
+  if (total === 0) {
+    return { items: [], total };
+  }
+
+  const limit = sanitizeLimit(options.limit, 200, 20);
+  const offset = sanitizeOffset(options.offset, 10_000);
+
+  const [rows] = await pool.query(
+    `SELECT
+      address,
+      name,
+      website,
+      identity,
+      public_key,
+      active,
+      created_at,
+      updated_at
+    FROM auditors
+    ORDER BY created_at DESC
+    LIMIT ${limit}
+    OFFSET ${offset}`
+  );
+
+  if (!Array.isArray(rows)) {
+    return { items: [], total };
+  }
+
+  return {
+    items: rows.map((row) => mapAuditorRecord(row as Record<string, unknown>)),
+    total
+  };
+}
 async function insertFinding(
   connection: Awaited<ReturnType<typeof pool.getConnection>>,
   auditId: string,
@@ -449,5 +564,18 @@ function mapAuditListItem(row: Record<string, unknown>): AuditListItem {
     auditorName: String(row.auditor_name),
     network: row.network ? String(row.network) : undefined,
     createdAt: toIsoDateTime(row.created_at)
+  };
+}
+
+function mapAuditorRecord(row: Record<string, unknown>): AuditorRecord {
+  return {
+    address: String(row.address),
+    name: String(row.name),
+    website: row.website ? String(row.website) : undefined,
+    identity: row.identity ? String(row.identity) : undefined,
+    publicKey: row.public_key ? String(row.public_key) : undefined,
+    active: Number(row.active) === 1,
+    createdAt: toIsoDateTime(row.created_at),
+    updatedAt: toIsoDateTime(row.updated_at)
   };
 }

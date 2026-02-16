@@ -1,6 +1,7 @@
 import "./env.js";
 import Fastify from "fastify";
-import type { AuditReport } from "@verisec/schema";
+import { getAddress, isAddress } from "ethers";
+import type { AuditReport, Signature } from "@verisec/schema";
 import { AuditSchemaId } from "@verisec/schema";
 import { getAuditValidator } from "./validation.js";
 import {
@@ -10,11 +11,15 @@ import {
   auditExists,
   listAudits,
   insertAnchor,
-  listAnchors
+  listAnchors,
+  upsertAuditor,
+  listAuditors,
+  getAuditorByAddress
 } from "./storage.js";
 import { runMigrations } from "./migrate.js";
 import { buildProofForFinding, computeMerkleRoot } from "./proofs.js";
 import { anchorAuditOnChain } from "./anchor.js";
+import { verifyAuditSignature } from "./signatures.js";
 
 const app = Fastify({ logger: true });
 const corsOrigin = process.env.CORS_ORIGIN ?? "*";
@@ -38,6 +43,71 @@ app.addHook("onSend", async (_request, reply, payload) => {
 app.get("/health", async () => ({ ok: true }));
 
 app.get("/v1/schema", async () => ({ schema: AuditSchemaId }));
+
+app.post("/v1/auditors", async (request, reply) => {
+  const payload = request.body as {
+    address?: string;
+    name?: string;
+    website?: string;
+    identity?: string;
+    publicKey?: string;
+    active?: boolean;
+  };
+
+  if (!payload.address || !isAddress(payload.address)) {
+    return reply.code(400).send({ error: "invalid_auditor_address" });
+  }
+
+  const name = payload.name?.trim();
+  if (!name) {
+    return reply.code(400).send({ error: "invalid_auditor_name" });
+  }
+
+  const auditor = await upsertAuditor({
+    address: getAddress(payload.address),
+    name,
+    website: payload.website,
+    identity: payload.identity,
+    publicKey: payload.publicKey,
+    active: payload.active ?? true
+  });
+
+  return {
+    status: "stored",
+    auditor
+  };
+});
+
+app.get("/v1/auditors", async (request) => {
+  const query = request.query as { limit?: string; offset?: string };
+  const limit = clampNumber(query.limit, 20, 1, 200);
+  const offset = clampNumber(query.offset, 0, 0, 10_000);
+
+  const { items, total } = await listAuditors({ limit, offset });
+
+  return {
+    items,
+    pagination: {
+      limit,
+      offset,
+      total
+    }
+  };
+});
+
+app.get("/v1/auditors/:address", async (request, reply) => {
+  const { address } = request.params as { address: string };
+  if (!isAddress(address)) {
+    return reply.code(400).send({ error: "invalid_auditor_address" });
+  }
+
+  const auditor = await getAuditorByAddress(getAddress(address));
+  if (!auditor) {
+    return reply.code(404).send({ error: "not_found" });
+  }
+
+  return auditor;
+});
 
 app.get("/v1/audits", async (request) => {
   const query = request.query as { limit?: string; offset?: string };
@@ -75,6 +145,75 @@ app.post("/v1/audits", async (request, reply) => {
 
   return reply.code(201).send({
     auditId: payload.auditId,
+    status: "stored"
+  });
+});
+
+app.post("/v1/submissions", async (request, reply) => {
+  const payload = request.body as {
+    audit?: AuditReport;
+    signature?: Signature;
+  };
+
+  if (!payload.audit || !payload.signature) {
+    return reply.code(400).send({ error: "invalid_submission_payload" });
+  }
+
+  const validator = await getAuditValidator();
+  if (!validator(payload.audit)) {
+    return reply.code(400).send({
+      error: "invalid_audit",
+      details: validator.errors
+    });
+  }
+
+  if (!payload.signature.signer || !payload.signature.signature) {
+    return reply.code(400).send({ error: "invalid_signature_payload" });
+  }
+
+  if (!isAddress(payload.signature.signer)) {
+    return reply.code(400).send({ error: "invalid_signer_address" });
+  }
+
+  const signer = getAddress(payload.signature.signer);
+  const auditor = await getAuditorByAddress(signer);
+  if (!auditor) {
+    return reply.code(400).send({ error: "auditor_not_registered", signer });
+  }
+  if (!auditor.active) {
+    return reply.code(400).send({ error: "auditor_inactive", signer });
+  }
+
+  const signature: Signature = {
+    signer,
+    signature: payload.signature.signature,
+    scheme: payload.signature.scheme ?? "eip191",
+    signedAt: payload.signature.signedAt
+  };
+
+  const verification = verifyAuditSignature(payload.audit, signature);
+  if (!verification.ok) {
+    return reply.code(400).send({
+      error: verification.error ?? "signature_verification_failed",
+      recoveredAddress: verification.recoveredAddress
+    });
+  }
+
+  const report: AuditReport = {
+    ...payload.audit,
+    signatures: [...(payload.audit.signatures ?? []), signature]
+  };
+
+  const result = await insertAudit(report);
+
+  if (result.exists) {
+    return reply.code(409).send({ error: "audit_exists", auditId: report.auditId });
+  }
+
+  return reply.code(201).send({
+    auditId: report.auditId,
+    signer,
+    verified: true,
     status: "stored"
   });
 });
