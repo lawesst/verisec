@@ -10,6 +10,8 @@
     "seed": "tsx src/seed.ts",
     "seed:all": "tsx src/seed.ts --all",
     "seed:refresh": "tsx src/seed.ts --all --refresh",
+    "pretest": "npm run build -w @verisec/schema",
+    "test": "tsx --test src/**/*.test.ts",
     "build": "tsc -p tsconfig.json"
   },
   "dependencies": {

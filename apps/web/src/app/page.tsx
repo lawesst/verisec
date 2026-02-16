@@ -2,6 +2,7 @@
 
 import React, { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { canonicalAuditMessage } from "@verisec/schema";
 import type { AuditReport, Finding } from "@verisec/schema";
 
 interface AuditListItem {
@@ -83,6 +84,10 @@ interface SubmissionResponse {
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_VERISEC_API_BASE_URL ?? "http://localhost:4010";
+
+interface EthereumProvider {
+  request: (payload: { method: string; params?: unknown[] }) => Promise<unknown>;
+}
 
 function buildUrl(path: string) {
   return new URL(path, API_BASE_URL).toString();
@@ -241,6 +246,10 @@ function ClientPage({ auditParam }: { auditParam?: string }) {
   const [submissionResult, setSubmissionResult] = React.useState<SubmissionResponse | null>(
     null
   );
+  const [walletStatus, setWalletStatus] = React.useState<
+    "idle" | "signing" | "success" | "error"
+  >("idle");
+  const [walletError, setWalletError] = React.useState<string | null>(null);
 
   const selectedAuditId = auditParam ?? audits?.items?.[0]?.auditId;
 
@@ -394,29 +403,28 @@ function ClientPage({ auditParam }: { auditParam?: string }) {
     await refreshAuditors();
   }
 
-  async function handleSubmissionSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setSubmissionStatus("submitting");
-    setSubmissionError(null);
-    setSubmissionResult(null);
-
-    let parsedAudit: AuditReport;
+  function parseSubmissionAudit(): AuditReport | null {
     try {
-      parsedAudit = JSON.parse(submissionAuditJson) as AuditReport;
+      return JSON.parse(submissionAuditJson) as AuditReport;
     } catch {
       setSubmissionStatus("error");
       setSubmissionError("Audit JSON is not valid JSON.");
-      return;
+      return null;
     }
+  }
 
+  async function submitSignedAudit(
+    parsedAudit: AuditReport,
+    signaturePayload: {
+      signer: string;
+      signature: string;
+      scheme: string;
+      signedAt?: string;
+    }
+  ) {
     const response = await postJson<SubmissionResponse>("/v1/submissions", {
       audit: parsedAudit,
-      signature: {
-        signer: submissionSigner.trim(),
-        signature: submissionSignature.trim(),
-        scheme: submissionScheme.trim() || "eip191",
-        signedAt: submissionSignedAt.trim() || undefined
-      }
+      signature: signaturePayload
     });
 
     if (!response.ok || !response.data) {
@@ -428,6 +436,96 @@ function ClientPage({ auditParam }: { auditParam?: string }) {
     setSubmissionStatus("success");
     setSubmissionResult(response.data);
     await refreshAudits();
+  }
+
+  async function handleSubmissionSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSubmissionStatus("submitting");
+    setSubmissionError(null);
+    setSubmissionResult(null);
+    setWalletStatus("idle");
+    setWalletError(null);
+
+    const parsedAudit = parseSubmissionAudit();
+    if (!parsedAudit) {
+      return;
+    }
+
+    await submitSignedAudit(parsedAudit, {
+      signer: submissionSigner.trim(),
+      signature: submissionSignature.trim(),
+      scheme: submissionScheme.trim() || "eip191",
+      signedAt: submissionSignedAt.trim() || undefined
+    });
+  }
+
+  async function handleWalletSignAndSubmit() {
+    setSubmissionStatus("submitting");
+    setSubmissionError(null);
+    setSubmissionResult(null);
+    setWalletStatus("signing");
+    setWalletError(null);
+
+    const parsedAudit = parseSubmissionAudit();
+    if (!parsedAudit) {
+      setWalletStatus("error");
+      setWalletError("Audit JSON is not valid JSON.");
+      return;
+    }
+
+    if (typeof window === "undefined") {
+      setSubmissionStatus("error");
+      setSubmissionError("Wallet signing is only available in browser context.");
+      setWalletStatus("error");
+      setWalletError("browser_context_required");
+      return;
+    }
+
+    const provider = (window as Window & { ethereum?: EthereumProvider }).ethereum;
+    if (!provider) {
+      setSubmissionStatus("error");
+      setSubmissionError("No injected wallet found. Install MetaMask or Rabby.");
+      setWalletStatus("error");
+      setWalletError("wallet_not_found");
+      return;
+    }
+
+    try {
+      const accounts = (await provider.request({
+        method: "eth_requestAccounts"
+      })) as string[];
+      const signer = accounts?.[0];
+      if (!signer) {
+        throw new Error("wallet_no_accounts");
+      }
+
+      const message = canonicalAuditMessage(parsedAudit);
+      const signature = (await provider.request({
+        method: "personal_sign",
+        params: [message, signer]
+      })) as string;
+      const signedAt = new Date().toISOString();
+
+      setSubmissionSigner(signer);
+      setSubmissionSignature(signature);
+      setSubmissionScheme("eip191");
+      setSubmissionSignedAt(signedAt);
+
+      await submitSignedAudit(parsedAudit, {
+        signer,
+        signature,
+        scheme: "eip191",
+        signedAt
+      });
+
+      setWalletStatus("success");
+    } catch (error) {
+      const message = (error as Error).message || "wallet_sign_failed";
+      setSubmissionStatus("error");
+      setSubmissionError(message);
+      setWalletStatus("error");
+      setWalletError(message);
+    }
   }
 
   return (
@@ -489,6 +587,7 @@ function ClientPage({ auditParam }: { auditParam?: string }) {
                     <th>Auditor</th>
                     <th>Network</th>
                     <th>Date</th>
+                    <th>Details</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -504,6 +603,11 @@ function ClientPage({ auditParam }: { auditParam?: string }) {
                       <td>{item.auditorName}</td>
                       <td>{item.network ?? "—"}</td>
                       <td>{formatDate(item.reportDate)}</td>
+                      <td>
+                        <a className="button secondary" href={`/audits/${item.auditId}`}>
+                          Open
+                        </a>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -888,6 +992,16 @@ function ClientPage({ auditParam }: { auditParam?: string }) {
                   >
                     Use active audit JSON
                   </button>
+                  <button
+                    className="button secondary"
+                    type="button"
+                    onClick={handleWalletSignAndSubmit}
+                    disabled={submissionStatus === "submitting" || apiStatus === "offline"}
+                  >
+                    {walletStatus === "signing"
+                      ? "Waiting for wallet signature..."
+                      : "Sign with wallet + submit"}
+                  </button>
                 </div>
                 <label className="field">
                   <span>Audit JSON</span>
@@ -898,7 +1012,9 @@ function ClientPage({ auditParam }: { auditParam?: string }) {
                     placeholder='{"auditId":"example","schemaVersion":"1.0.0",...}'
                     required
                   />
-                  <small className="helper">Must validate against the canonical schema.</small>
+                  <small className="helper">
+                    Must validate against the canonical schema.
+                  </small>
                 </label>
                 <label className="field">
                   <span>Signer address</span>
@@ -947,7 +1063,9 @@ function ClientPage({ auditParam }: { auditParam?: string }) {
                     type="submit"
                     disabled={submissionStatus === "submitting" || apiStatus === "offline"}
                   >
-                    {submissionStatus === "submitting" ? "Submitting..." : "Upload signed audit"}
+                    {submissionStatus === "submitting"
+                      ? "Submitting..."
+                      : "Upload signed audit"}
                   </button>
                   {submissionStatus === "success" ? (
                     <span className="status-pill online">Verified + stored</span>
@@ -956,6 +1074,12 @@ function ClientPage({ auditParam }: { auditParam?: string }) {
                     <span className="status-pill offline">
                       {submissionError ?? "Submission failed"}
                     </span>
+                  ) : null}
+                  {walletStatus === "success" ? (
+                    <span className="status-pill online">Wallet signature verified</span>
+                  ) : null}
+                  {walletStatus === "error" && walletError ? (
+                    <span className="status-pill offline">{walletError}</span>
                   ) : null}
                 </div>
               </form>

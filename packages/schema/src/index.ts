@@ -66,3 +66,32 @@ export interface AuditReport {
   signatures?: Signature[];
   metadata?: Record<string, unknown>;
 }
+
+export function canonicalAuditMessage(audit: AuditReport): string {
+  const { signatures, ...unsignedAudit } = audit;
+  return stableStringify(unsignedAudit);
+}
+
+function stableStringify(value: unknown): string {
+  return JSON.stringify(normalizeValue(value));
+}
+
+function normalizeValue(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map((item) => normalizeValue(item));
+  }
+
+  if (value && typeof value === "object") {
+    const entries = Object.entries(value as Record<string, unknown>)
+      .filter(([, entryValue]) => entryValue !== undefined)
+      .sort(([a], [b]) => a.localeCompare(b));
+
+    const normalized: Record<string, unknown> = {};
+    for (const [key, entryValue] of entries) {
+      normalized[key] = normalizeValue(entryValue);
+    }
+    return normalized;
+  }
+
+  return value;
+}
