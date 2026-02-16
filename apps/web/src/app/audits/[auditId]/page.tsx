@@ -172,6 +172,18 @@ export default function AuditDetailsPage({
   return (
     <main>
       <div className="page">
+        <header className="topbar reveal" style={{ animationDelay: "0.02s" }}>
+          <div className="brand">
+            <span className="brand-dot" />
+            <span>VeriSec Explorer</span>
+          </div>
+          <div className="top-actions">
+            <Link className="button secondary" href="/">
+              Dashboard
+            </Link>
+          </div>
+        </header>
+
         <section className="hero reveal" style={{ animationDelay: "0.05s" }}>
           <div className="actions">
             <Link className="button" href="/">

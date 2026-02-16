@@ -531,17 +531,35 @@ function ClientPage({ auditParam }: { auditParam?: string }) {
   return (
     <main>
       <div className="page">
+        <header className="topbar reveal" style={{ animationDelay: "0.02s" }}>
+          <div className="brand">
+            <span className="brand-dot" />
+            <span>VeriSec Explorer</span>
+          </div>
+          <div className="top-actions">
+            <a className="button secondary" href="#audits">
+              Audits
+            </a>
+            <a className="button secondary" href="#auditor-registry">
+              Auditors
+            </a>
+            <a className="button secondary" href="#signed-submissions">
+              Submissions
+            </a>
+          </div>
+        </header>
+
         <section className="hero reveal" style={{ animationDelay: "0.05s" }}>
           <div className="badges">
-            <span className="badge">VeriSec Explorer</span>
+            <span className="badge">Security Data Oracle</span>
             <span className="badge">Arbitrum • MVP</span>
             <span className="badge">Live API</span>
           </div>
-          <h1>Verifiable audit intelligence, anchored on-chain.</h1>
+          <h1>Security intelligence you can query, verify, and enforce.</h1>
           <p>
-            VeriSec turns static audit PDFs into structured, cryptographically verifiable
-            security data. Protocols can gate deployments, governance, and upgrades on real
-            findings instead of trust assumptions.
+            Convert static audit reports into structured records with proof-ready findings.
+            Build guardrails for deployments, governance, and upgrades using verifiable
+            Arbitrum-native security data.
           </p>
           <div className="actions">
             <span className={`status-pill ${apiStatus}`}>
