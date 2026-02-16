@@ -3,6 +3,7 @@
   "compilerOptions": {
     "jsx": "preserve",
     "outDir": "dist",
+    "lib": ["DOM", "DOM.Iterable", "ES2020"],
     "allowJs": true,
     "noEmit": true,
     "incremental": true,

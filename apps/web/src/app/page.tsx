@@ -53,6 +53,34 @@ interface AnchorActionResult {
   anchoredAt?: string;
 }
 
+interface AuditorRecord {
+  address: string;
+  name: string;
+  website?: string;
+  identity?: string;
+  publicKey?: string;
+  active: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+interface AuditorsResponse {
+  items: AuditorRecord[];
+  pagination: Pagination;
+}
+
+interface AuditorUpsertResponse {
+  status: "stored";
+  auditor: AuditorRecord;
+}
+
+interface SubmissionResponse {
+  auditId: string;
+  signer: string;
+  verified: boolean;
+  status: "stored";
+}
+
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_VERISEC_API_BASE_URL ?? "http://localhost:4010";
 
@@ -182,23 +210,52 @@ function ClientPage({ auditParam }: { auditParam?: string }) {
   const [audit, setAudit] = React.useState<AuditReport | null>(null);
   const [findings, setFindings] = React.useState<FindingsResponse | null>(null);
   const [anchors, setAnchors] = React.useState<AnchorsResponse | null>(null);
+  const [auditors, setAuditors] = React.useState<AuditorsResponse | null>(null);
   const [apiStatus, setApiStatus] = React.useState<"online" | "offline">("online");
   const [auditNotFound, setAuditNotFound] = React.useState(false);
   const [anchorStatus, setAnchorStatus] = React.useState<
     "idle" | "anchoring" | "success" | "error"
   >("idle");
   const [anchorError, setAnchorError] = React.useState<string | null>(null);
+  const [auditorStatus, setAuditorStatus] = React.useState<
+    "idle" | "saving" | "success" | "error"
+  >("idle");
+  const [auditorError, setAuditorError] = React.useState<string | null>(null);
+  const [auditorForm, setAuditorForm] = React.useState({
+    address: "",
+    name: "",
+    website: "",
+    identity: "",
+    publicKey: "",
+    active: true
+  });
+  const [submissionAuditJson, setSubmissionAuditJson] = React.useState<string>("");
+  const [submissionSigner, setSubmissionSigner] = React.useState<string>("");
+  const [submissionSignature, setSubmissionSignature] = React.useState<string>("");
+  const [submissionScheme, setSubmissionScheme] = React.useState<string>("eip191");
+  const [submissionSignedAt, setSubmissionSignedAt] = React.useState<string>("");
+  const [submissionStatus, setSubmissionStatus] = React.useState<
+    "idle" | "submitting" | "success" | "error"
+  >("idle");
+  const [submissionError, setSubmissionError] = React.useState<string | null>(null);
+  const [submissionResult, setSubmissionResult] = React.useState<SubmissionResponse | null>(
+    null
+  );
 
   const selectedAuditId = auditParam ?? audits?.items?.[0]?.auditId;
 
   React.useEffect(() => {
     let active = true;
 
-    async function loadAudits() {
+    async function bootstrap() {
       try {
-        const data = await fetchJson<AuditListResponse>("/v1/audits?limit=25&offset=0");
+        const [auditsData, auditorsData] = await Promise.all([
+          fetchJson<AuditListResponse>("/v1/audits?limit=25&offset=0"),
+          fetchJson<AuditorsResponse>("/v1/auditors?limit=50&offset=0")
+        ]);
         if (!active) return;
-        setAudits(data);
+        setAudits(auditsData);
+        setAuditors(auditorsData);
         setApiStatus("online");
       } catch {
         if (!active) return;
@@ -206,7 +263,7 @@ function ClientPage({ auditParam }: { auditParam?: string }) {
       }
     }
 
-    loadAudits();
+    bootstrap();
     return () => {
       active = false;
     };
@@ -293,6 +350,84 @@ function ClientPage({ auditParam }: { auditParam?: string }) {
       `/v1/audits/${selectedAuditId}/anchors`
     );
     setAnchors(refreshed);
+  }
+
+  async function refreshAuditors() {
+    try {
+      const refreshed = await fetchJson<AuditorsResponse>("/v1/auditors?limit=50&offset=0");
+      setAuditors(refreshed);
+    } catch {
+      setApiStatus("offline");
+    }
+  }
+
+  async function refreshAudits() {
+    try {
+      const refreshed = await fetchJson<AuditListResponse>("/v1/audits?limit=25&offset=0");
+      setAudits(refreshed);
+    } catch {
+      setApiStatus("offline");
+    }
+  }
+
+  async function handleAuditorSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setAuditorStatus("saving");
+    setAuditorError(null);
+
+    const response = await postJson<AuditorUpsertResponse>("/v1/auditors", {
+      address: auditorForm.address.trim(),
+      name: auditorForm.name.trim(),
+      website: auditorForm.website.trim() || undefined,
+      identity: auditorForm.identity.trim() || undefined,
+      publicKey: auditorForm.publicKey.trim() || undefined,
+      active: auditorForm.active
+    });
+
+    if (!response.ok || !response.data) {
+      setAuditorStatus("error");
+      setAuditorError(response.error ?? "Failed to save auditor");
+      return;
+    }
+
+    setAuditorStatus("success");
+    await refreshAuditors();
+  }
+
+  async function handleSubmissionSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSubmissionStatus("submitting");
+    setSubmissionError(null);
+    setSubmissionResult(null);
+
+    let parsedAudit: AuditReport;
+    try {
+      parsedAudit = JSON.parse(submissionAuditJson) as AuditReport;
+    } catch {
+      setSubmissionStatus("error");
+      setSubmissionError("Audit JSON is not valid JSON.");
+      return;
+    }
+
+    const response = await postJson<SubmissionResponse>("/v1/submissions", {
+      audit: parsedAudit,
+      signature: {
+        signer: submissionSigner.trim(),
+        signature: submissionSignature.trim(),
+        scheme: submissionScheme.trim() || "eip191",
+        signedAt: submissionSignedAt.trim() || undefined
+      }
+    });
+
+    if (!response.ok || !response.data) {
+      setSubmissionStatus("error");
+      setSubmissionError(response.error ?? "Submission failed");
+      return;
+    }
+
+    setSubmissionStatus("success");
+    setSubmissionResult(response.data);
+    await refreshAudits();
   }
 
   return (
@@ -561,7 +696,308 @@ function ClientPage({ auditParam }: { auditParam?: string }) {
           )}
         </section>
 
-        <section className="section reveal" style={{ animationDelay: "0.28s" }}>
+        <section
+          className="section reveal"
+          style={{ animationDelay: "0.3s" }}
+          id="auditor-registry"
+        >
+          <h2>Auditor registry</h2>
+          <div className="grid-2">
+            <div className="card">
+              <h3>Register or update auditor</h3>
+              <form className="form" onSubmit={handleAuditorSubmit}>
+                <label className="field">
+                  <span>Address</span>
+                  <input
+                    className="input mono"
+                    type="text"
+                    placeholder="0x..."
+                    value={auditorForm.address}
+                    onChange={(event) =>
+                      setAuditorForm((current) => ({
+                        ...current,
+                        address: event.currentTarget.value
+                      }))
+                    }
+                    required
+                  />
+                </label>
+                <label className="field">
+                  <span>Name</span>
+                  <input
+                    className="input"
+                    type="text"
+                    placeholder="OpenZeppelin"
+                    value={auditorForm.name}
+                    onChange={(event) =>
+                      setAuditorForm((current) => ({
+                        ...current,
+                        name: event.currentTarget.value
+                      }))
+                    }
+                    required
+                  />
+                </label>
+                <label className="field">
+                  <span>Website (optional)</span>
+                  <input
+                    className="input"
+                    type="text"
+                    placeholder="https://example.com"
+                    value={auditorForm.website}
+                    onChange={(event) =>
+                      setAuditorForm((current) => ({
+                        ...current,
+                        website: event.currentTarget.value
+                      }))
+                    }
+                  />
+                </label>
+                <label className="field">
+                  <span>Identity (optional)</span>
+                  <input
+                    className="input"
+                    type="text"
+                    placeholder="@auditor"
+                    value={auditorForm.identity}
+                    onChange={(event) =>
+                      setAuditorForm((current) => ({
+                        ...current,
+                        identity: event.currentTarget.value
+                      }))
+                    }
+                  />
+                </label>
+                <label className="field">
+                  <span>Public key (optional)</span>
+                  <input
+                    className="input mono"
+                    type="text"
+                    placeholder="0x..."
+                    value={auditorForm.publicKey}
+                    onChange={(event) =>
+                      setAuditorForm((current) => ({
+                        ...current,
+                        publicKey: event.currentTarget.value
+                      }))
+                    }
+                  />
+                </label>
+                <label className="checkbox-row">
+                  <input
+                    type="checkbox"
+                    checked={auditorForm.active}
+                    onChange={(event) =>
+                      setAuditorForm((current) => ({
+                        ...current,
+                        active: event.currentTarget.checked
+                      }))
+                    }
+                  />
+                  <span>Active auditor</span>
+                </label>
+                <div className="actions">
+                  <button
+                    className="button primary"
+                    type="submit"
+                    disabled={auditorStatus === "saving" || apiStatus === "offline"}
+                  >
+                    {auditorStatus === "saving" ? "Saving..." : "Save auditor"}
+                  </button>
+                  {auditorStatus === "success" ? (
+                    <span className="status-pill online">Saved</span>
+                  ) : null}
+                  {auditorStatus === "error" ? (
+                    <span className="status-pill offline">
+                      {auditorError ?? "Failed to save auditor"}
+                    </span>
+                  ) : null}
+                </div>
+              </form>
+            </div>
+            <div className="card">
+              <h3>Registered auditors</h3>
+              {!auditors || auditors.items.length === 0 ? (
+                <div className="notice">No auditors registered yet.</div>
+              ) : (
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Address</th>
+                      <th>Status</th>
+                      <th>Website</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {auditors.items.map((item) => {
+                      const websiteUrl = normalizeUrl(item.website);
+                      return (
+                        <tr key={item.address}>
+                          <td>{item.name}</td>
+                          <td className="mono">{item.address}</td>
+                          <td>
+                            <span className={`chip ${item.active ? "active" : "inactive"}`}>
+                              {item.active ? "active" : "inactive"}
+                            </span>
+                          </td>
+                          <td>
+                            {websiteUrl ? (
+                              <a
+                                className="button secondary"
+                                href={websiteUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                Open
+                              </a>
+                            ) : (
+                              "—"
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        </section>
+
+        <section
+          className="section reveal"
+          style={{ animationDelay: "0.34s" }}
+          id="signed-submissions"
+        >
+          <h2>Signed submission upload</h2>
+          <div className="grid-2">
+            <div className="card">
+              <h3>Submit signed audit</h3>
+              <form className="form" onSubmit={handleSubmissionSubmit}>
+                <div className="actions">
+                  <button
+                    className="button"
+                    type="button"
+                    onClick={() =>
+                      setSubmissionAuditJson(
+                        audit ? JSON.stringify(audit, null, 2) : submissionAuditJson
+                      )
+                    }
+                    disabled={!audit}
+                  >
+                    Use active audit JSON
+                  </button>
+                </div>
+                <label className="field">
+                  <span>Audit JSON</span>
+                  <textarea
+                    className="textarea mono"
+                    value={submissionAuditJson}
+                    onChange={(event) => setSubmissionAuditJson(event.currentTarget.value)}
+                    placeholder='{"auditId":"example","schemaVersion":"1.0.0",...}'
+                    required
+                  />
+                  <small className="helper">Must validate against the canonical schema.</small>
+                </label>
+                <label className="field">
+                  <span>Signer address</span>
+                  <input
+                    className="input mono"
+                    type="text"
+                    placeholder="0x..."
+                    value={submissionSigner}
+                    onChange={(event) => setSubmissionSigner(event.currentTarget.value)}
+                    required
+                  />
+                </label>
+                <label className="field">
+                  <span>Signature</span>
+                  <textarea
+                    className="textarea mono compact"
+                    value={submissionSignature}
+                    onChange={(event) => setSubmissionSignature(event.currentTarget.value)}
+                    placeholder="0x..."
+                    required
+                  />
+                </label>
+                <label className="field">
+                  <span>Scheme</span>
+                  <input
+                    className="input"
+                    type="text"
+                    value={submissionScheme}
+                    onChange={(event) => setSubmissionScheme(event.currentTarget.value)}
+                    placeholder="eip191"
+                  />
+                </label>
+                <label className="field">
+                  <span>Signed at (optional)</span>
+                  <input
+                    className="input"
+                    type="text"
+                    value={submissionSignedAt}
+                    onChange={(event) => setSubmissionSignedAt(event.currentTarget.value)}
+                    placeholder="2026-02-16T18:00:00Z"
+                  />
+                </label>
+                <div className="actions">
+                  <button
+                    className="button primary"
+                    type="submit"
+                    disabled={submissionStatus === "submitting" || apiStatus === "offline"}
+                  >
+                    {submissionStatus === "submitting" ? "Submitting..." : "Upload signed audit"}
+                  </button>
+                  {submissionStatus === "success" ? (
+                    <span className="status-pill online">Verified + stored</span>
+                  ) : null}
+                  {submissionStatus === "error" ? (
+                    <span className="status-pill offline">
+                      {submissionError ?? "Submission failed"}
+                    </span>
+                  ) : null}
+                </div>
+              </form>
+            </div>
+            <div className="card">
+              <h3>Submission result</h3>
+              {submissionResult ? (
+                <div className="stack">
+                  <div className="kv">
+                    <span>Audit ID</span>
+                    <strong>{submissionResult.auditId}</strong>
+                  </div>
+                  <div className="kv">
+                    <span>Signer</span>
+                    <strong className="mono">{submissionResult.signer}</strong>
+                  </div>
+                  <div className="kv">
+                    <span>Verification</span>
+                    <strong>{submissionResult.verified ? "Passed" : "Failed"}</strong>
+                  </div>
+                  <div className="actions">
+                    <a
+                      className="button secondary"
+                      href={`/?audit=${submissionResult.auditId}#active-audit`}
+                    >
+                      Open stored audit
+                    </a>
+                  </div>
+                </div>
+              ) : (
+                <div className="notice">
+                  No signed submission yet. Paste an audit JSON and matching signature.
+                </div>
+              )}
+              <div className="codeblock">
+                {`POST /v1/submissions\n{\n  "audit": { ... },\n  "signature": {\n    "signer": "0x...",\n    "signature": "0x...",\n    "scheme": "eip191"\n  }\n}`}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="section reveal" style={{ animationDelay: "0.38s" }}>
           <h2>Developer integration</h2>
           <div className="grid-2">
             <div className="card">
@@ -574,6 +1010,9 @@ function ClientPage({ auditParam }: { auditParam?: string }) {
                 <li>GET /v1/audits/:auditId/findings/:findingId/proof</li>
                 <li>POST /v1/audits/:auditId/anchor</li>
                 <li>GET /v1/audits/:auditId/anchors</li>
+                <li>POST /v1/auditors</li>
+                <li>GET /v1/auditors</li>
+                <li>POST /v1/submissions</li>
               </ul>
             </div>
             <div className="card">
@@ -587,7 +1026,7 @@ function ClientPage({ auditParam }: { auditParam?: string }) {
           </div>
         </section>
 
-        <footer className="footer reveal" style={{ animationDelay: "0.32s" }}>
+        <footer className="footer reveal" style={{ animationDelay: "0.42s" }}>
           <span>VeriSec Explorer • MVP build</span>
           <span>Anchored security data for Arbitrum protocols.</span>
         </footer>

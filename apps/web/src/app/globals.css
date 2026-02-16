@@ -292,6 +292,81 @@ a {
   margin: 0;
   padding-left: 18px;
 }
+
+.form {
+  display: grid;
+  gap: 12px;
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+}
+
+.field span {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.input,
+.textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: rgba(8, 14, 20, 0.85);
+  color: var(--text);
+  outline: none;
+}
+
+.input:focus,
+.textarea:focus {
+  border-color: rgba(59, 214, 198, 0.8);
+  box-shadow: 0 0 0 3px rgba(59, 214, 198, 0.2);
+}
+
+.textarea {
+  min-height: 180px;
+  resize: vertical;
+}
+
+.textarea.compact {
+  min-height: 96px;
+}
+
+.helper {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.checkbox-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.72rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  padding: 4px 10px;
+}
+
+.chip.active {
+  color: #0f2d1c;
+  background: rgba(75, 211, 123, 0.8);
+}
+
+.chip.inactive {
+  color: #2d0f0f;
+  background: rgba(255, 122, 122, 0.8);
+}
+
 .kv {
   display: grid;
   gap: 8px;
