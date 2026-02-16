@@ -1,0 +1,56 @@
+{
+  "schemaVersion": "verisec.audit.v1",
+  "auditId": "camelot-router-bailsec",
+  "project": {
+    "name": "Camelot Router",
+    "slug": "camelot-router",
+    "repository": "https://github.com/CamelotLabs",
+    "version": "router"
+  },
+  "auditor": {
+    "name": "BailSec"
+  },
+  "reportDate": "2026-02-09",
+  "network": "arbitrum",
+  "artifacts": {
+    "reportUrl": "https://3420642431-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FHBFQDThxW7Uo7iHfOHG5%2Fuploads%2F9j3dl3dZsks2vhewdozh%2FBailsec%20-%20Camelot%20-%20Router%20-%20Final%20Report.pdf?alt=media&token=c8dd543e-ed96-463f-80ff-a3026377b6fa"
+  },
+  "findings": [
+    { "id": "CBR-01", "title": "Use of SafeMath in Solidity 0.8 or later", "severity": "info", "status": "open" },
+    { "id": "CBR-02", "title": "Lack of payable declaration on receive function", "severity": "info", "status": "open" },
+    { "id": "CBR-03", "title": "Default values", "severity": "info", "status": "open" },
+    { "id": "CBR-04", "title": "Short variable names", "severity": "info", "status": "open" },
+    { "id": "CBR-05", "title": "Excessive loop in getAmountsIn", "severity": "info", "status": "open" },
+    { "id": "CBR-06", "title": "quote does not revert on insufficient input amount", "severity": "info", "status": "open" },
+    { "id": "CBR-07", "title": "DEX address passed into initialize is not zero validated", "severity": "info", "status": "open" },
+    { "id": "CBR-08", "title": "Default visibility", "severity": "info", "status": "open" },
+    { "id": "CBR-09", "title": "quote function does not revert on reserveIn being zero", "severity": "info", "status": "open" },
+    { "id": "CBR-10", "title": "Missing context in error message", "severity": "info", "status": "open" },
+    { "id": "CBR-11", "title": "Index used in loop is not externally capped", "severity": "info", "status": "open" },
+    { "id": "CBR-12", "title": "ratio calculation may have precision loss", "severity": "info", "status": "open" },
+    { "id": "CBR-13", "title": "Lack of existence checks can prevent tokens from being withdrawn", "severity": "info", "status": "open" },
+    { "id": "CBR-14", "title": "returnLastFee is state changing but not documented and should be internal", "severity": "info", "status": "open" },
+    { "id": "CBR-15", "title": "getAmountsOut and getAmountsIn use require for length check", "severity": "info", "status": "open" },
+    { "id": "CBR-16", "title": "Division by zero", "severity": "info", "status": "open" },
+    { "id": "CBR-17", "title": "quote function may overflow", "severity": "low", "status": "open" },
+    { "id": "CBR-18", "title": "Loss of precision in getAmountOut and getAmountIn", "severity": "low", "status": "open" },
+    { "id": "CBR-19", "title": "Possible overflow in computation of amount in pairFor", "severity": "low", "status": "open" },
+    { "id": "CBR-20", "title": "Type conversion uint112 to uint256 in getReserves is unsafe", "severity": "low", "status": "open" },
+    { "id": "CBR-21", "title": "Inconsistent fixed point precision", "severity": "low", "status": "open" },
+    { "id": "CBR-22", "title": "Flash loan price manipulation", "severity": "medium", "status": "open" },
+    { "id": "CBR-23", "title": "Malicious token behavior (batch transfer)", "severity": "medium", "status": "open" },
+    { "id": "CBR-24", "title": "Unable to refund ETH sent to Router", "severity": "medium", "status": "open" },
+    { "id": "CBR-25", "title": "User supplied data may be incorrect", "severity": "medium", "status": "open" },
+    { "id": "CBR-26", "title": "Incorrect reserve values returned in getAmountsIn", "severity": "medium", "status": "open" },
+    { "id": "CBR-27", "title": "Presale function is susceptible to partial refund", "severity": "medium", "status": "open" },
+    { "id": "CBR-28", "title": "uniswapV2Call allows transfer of arbitrary token amounts", "severity": "medium", "status": "open" },
+    { "id": "CBR-29", "title": "adjustLiquidity can be called repeatedly by anyone", "severity": "medium", "status": "open" },
+    { "id": "CBR-30", "title": "Approvals do not decrease allowance and can be reused", "severity": "medium", "status": "open" },
+    { "id": "CBR-31", "title": "addLiquidity can manipulate amounts in presale pool", "severity": "high", "status": "open" },
+    { "id": "CBR-32", "title": "Presale token can be transferred without transferFrom", "severity": "high", "status": "open" }
+  ],
+  "metadata": {
+    "source": "https://docs.camelot.exchange/references/audits",
+    "reportDateNote": "Report date not present in PDF text extraction"
+  }
+}

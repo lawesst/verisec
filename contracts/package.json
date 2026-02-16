@@ -1,0 +1,16 @@
+{
+  "name": "@verisec/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "hardhat compile",
+    "test": "hardhat test",
+    "deploy:sepolia": "hardhat run --network arbitrumSepolia scripts/deploy.ts",
+    "deploy:arb": "hardhat run --network arbitrumOne scripts/deploy.ts"
+  },
+  "devDependencies": {
+    "hardhat": "^2.19.0",
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "typescript": "^5.3.3"
+  }
+}

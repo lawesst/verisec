@@ -1,0 +1,16 @@
+node_modules
+dist
+out
+coverage
+.env
+.env.local
+.next
+.DS_Store
+
+# App-specific env files
+apps/*/.env.local
+
+# Hardhat / contract build artifacts
+contracts/artifacts/
+contracts/cache/
+contracts/typechain-types/

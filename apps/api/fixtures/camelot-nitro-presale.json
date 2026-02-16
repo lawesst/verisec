@@ -1,0 +1,138 @@
+{
+  "schemaVersion": "verisec.audit.v1",
+  "auditId": "camelot-nitro-presale-2022-11-14",
+  "project": {
+    "name": "Camelot Nitro & Presale",
+    "slug": "camelot-nitro-presale",
+    "repository": "https://github.com/CamelotLabs",
+    "version": "nitro-presale"
+  },
+  "auditor": {
+    "name": "Paladin",
+    "website": "https://paladinsec.co"
+  },
+  "reportDate": "2022-11-14",
+  "network": "arbitrum",
+  "artifacts": {
+    "reportUrl": "https://paladinsec.co/assets/audits/20221114_Paladin_CamelotNitro%26Presale_Final_Report.pdf"
+  },
+  "findings": [
+    {
+      "id": "CNP-01",
+      "title": "NFTPool.seizeRewards can be abused to trigger MGV while losing rewards",
+      "severity": "info",
+      "status": "resolved"
+    },
+    {
+      "id": "CNP-02",
+      "title": "Risk of loss of funds due to user-supplied account addresses",
+      "severity": "low",
+      "status": "resolved"
+    },
+    {
+      "id": "CNP-03",
+      "title": "Funds sent to NitroPool contract cannot be withdrawn",
+      "severity": "medium",
+      "status": "resolved"
+    },
+    {
+      "id": "CNP-04",
+      "title": "Inconsistent use of ^0.8.12 and 0.8.13",
+      "severity": "info",
+      "status": "resolved"
+    },
+    {
+      "id": "CNP-05",
+      "title": "NitroPool does not check if rewarder is whitelisted",
+      "severity": "info",
+      "status": "resolved"
+    },
+    {
+      "id": "CNP-06",
+      "title": "NFTPool.rewards and NFTPool.pendingRewards may be incorrect",
+      "severity": "high",
+      "status": "mitigated"
+    },
+    {
+      "id": "CNP-07",
+      "title": "Insecure NFTPool construction",
+      "severity": "low",
+      "status": "resolved"
+    },
+    {
+      "id": "CNP-08",
+      "title": "NFTPool.pools can be easily tampered with",
+      "severity": "info",
+      "status": "resolved"
+    },
+    {
+      "id": "CNP-09",
+      "title": "Potential manipulation of fee value",
+      "severity": "low",
+      "status": "resolved"
+    },
+    {
+      "id": "CNP-10",
+      "title": "NitroPool does not check if config value has already been set",
+      "severity": "low",
+      "status": "resolved"
+    },
+    {
+      "id": "CNP-11",
+      "title": "Large portion of logic can be front-run and exploited",
+      "severity": "info",
+      "status": "resolved"
+    },
+    {
+      "id": "CNP-12",
+      "title": "Lack of validation on multiplierPoints return value",
+      "severity": "medium",
+      "status": "resolved"
+    },
+    {
+      "id": "CNP-13",
+      "title": "lockDuration to uint64 conversion may overflow",
+      "severity": "high",
+      "status": "resolved"
+    },
+    {
+      "id": "CNP-14",
+      "title": "Update of NitroPool.pools not applied if locked",
+      "severity": "medium",
+      "status": "accepted"
+    },
+    {
+      "id": "CNP-15",
+      "title": "Insufficient balance checks",
+      "severity": "medium",
+      "status": "resolved"
+    },
+    {
+      "id": "CNP-16",
+      "title": "Lack of validation for NFT address",
+      "severity": "info",
+      "status": "resolved"
+    },
+    {
+      "id": "CNP-17",
+      "title": "Lack of validation for poolIdentifier",
+      "severity": "info",
+      "status": "resolved"
+    },
+    {
+      "id": "CNP-18",
+      "title": "Incorrect initialization",
+      "severity": "info",
+      "status": "resolved"
+    },
+    {
+      "id": "CNP-19",
+      "title": "Typographical errors",
+      "severity": "info",
+      "status": "resolved"
+    }
+  ],
+  "metadata": {
+    "source": "https://docs.camelot.exchange/references/audits"
+  }
+}

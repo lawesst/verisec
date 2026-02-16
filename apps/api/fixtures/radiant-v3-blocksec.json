@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "verisec.audit.v1",
+  "auditId": "radiant-v3-blocksec",
+  "project": {
+    "name": "Radiant Capital v3",
+    "slug": "radiant-v3",
+    "repository": "https://github.com/radiant-capital"
+  },
+  "auditor": {
+    "name": "BlockSec",
+    "website": "https://blocksec.com"
+  },
+  "reportDate": "2026-02-09",
+  "network": "arbitrum",
+  "artifacts": {
+    "reportUrl": "https://content.gitbook.com/content/c8CwAEN8ihh81y90gyG1/blobs/F8mxUFKIUDpLcvgmV545/Radiant%20UniswapV3%20Helpers%20-%20BlockSec.pdf"
+  },
+  "findings": [
+    { "id": "RB-01", "title": "Incorrect use of scaling factor", "severity": "low", "status": "resolved" },
+    { "id": "RB-02", "title": "Incorrect order of operations", "severity": "low", "status": "resolved" },
+    { "id": "RB-03", "title": "Incorrect use of state variable", "severity": "medium", "status": "resolved" },
+    { "id": "RB-04", "title": "Incorrect implementation of price range", "severity": "medium", "status": "resolved" },
+    { "id": "RB-05", "title": "Incorrect handling of debt", "severity": "medium", "status": "resolved" },
+    { "id": "RB-06", "title": "Incorrect handling of token transfers", "severity": "low", "status": "resolved" },
+    { "id": "RB-R1", "title": "Ensure the accuracy of the risk factor", "severity": "info", "status": "resolved" },
+    { "id": "RB-R2", "title": "Recheck the correctness of the conversion", "severity": "info", "status": "resolved" },
+    { "id": "RB-N1", "title": "LP pricing module is complex; add comments for readability", "severity": "info", "status": "accepted" },
+    { "id": "RB-N2", "title": "Using nonReentrant on ERC20 functions is uncommon", "severity": "info", "status": "accepted" },
+    { "id": "RB-N3", "title": "Remove unused variables", "severity": "info", "status": "accepted" }
+  ],
+  "metadata": {
+    "source": "https://docs.radiant.capital/radiant/contracts-and-security/audits/v3-audits",
+    "reportTitle": "BlockSec - Radiant V3 Core and DLP Smart Contract Audit Report",
+    "reportDateNote": "Report date not present in PDF text extraction"
+  }
+}

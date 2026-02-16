@@ -1,0 +1,85 @@
+{
+  "schemaVersion": "verisec.audit.v1",
+  "auditId": "audit-2026-0001",
+  "project": {
+    "name": "Example Protocol",
+    "slug": "example-protocol",
+    "repository": "https://github.com/example/protocol",
+    "version": "1.0.0",
+    "contractAddresses": [
+      "0x1111111111111111111111111111111111111111",
+      "0x2222222222222222222222222222222222222222"
+    ]
+  },
+  "auditor": {
+    "name": "Example Audit Co",
+    "website": "https://example-audit.co",
+    "publicKey": "0xabc123",
+    "identity": "example-audit"
+  },
+  "reportDate": "2026-02-08",
+  "commit": "deadbeef",
+  "network": "arbitrum",
+  "artifacts": {
+    "ipfsCid": "bafybeigdyrztwte6y6c2b6e7v3k3k5k6y7u7r7u",
+    "reportUrl": "https://paladinsec.co/assets/audits/20221114_Paladin_CamelotNitro%26Presale_Final_Report.pdf"
+  },
+  "findings": [
+    {
+      "id": "F-1",
+      "title": "Reentrancy in withdraw()",
+      "severity": "high",
+      "status": "open",
+      "description": "A reentrancy condition allows draining funds.",
+      "category": "reentrancy",
+      "cwe": ["CWE-841"],
+      "affectedContracts": ["Vault"],
+      "affectedAddresses": ["0x1111111111111111111111111111111111111111"],
+      "codeReferences": [
+        {
+          "path": "contracts/Vault.sol",
+          "lineStart": 120,
+          "lineEnd": 150,
+          "commit": "deadbeef"
+        }
+      ],
+      "recommendation": "Use a reentrancy guard and checks-effects-interactions.",
+      "remediation": "Added nonReentrant modifier and re-ordered state updates.",
+      "createdAt": "2026-02-01T12:00:00Z",
+      "updatedAt": "2026-02-07T18:00:00Z",
+      "tags": ["critical-path", "funds-at-risk"]
+    },
+    {
+      "id": "F-2",
+      "title": "Unchecked return value",
+      "severity": "medium",
+      "status": "mitigated",
+      "description": "Return value from token transfer is unchecked.",
+      "category": "unchecked-call",
+      "cwe": ["CWE-252"],
+      "affectedContracts": ["TokenManager"],
+      "codeReferences": [
+        {
+          "path": "contracts/TokenManager.sol",
+          "lineStart": 45,
+          "lineEnd": 52
+        }
+      ],
+      "recommendation": "Require success from transfer calls.",
+      "createdAt": "2026-01-28T10:30:00Z",
+      "updatedAt": "2026-02-02T15:00:00Z",
+      "tags": ["safety"]
+    }
+  ],
+  "signatures": [
+    {
+      "signer": "0x1234abcd",
+      "signature": "0xfeedface",
+      "scheme": "eip191",
+      "signedAt": "2026-02-08T09:30:00Z"
+    }
+  ],
+  "metadata": {
+    "notes": "Sample audit report for local testing."
+  }
+}

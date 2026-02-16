@@ -1,0 +1,145 @@
+{
+  "$id": "https://verisec.xyz/schemas/audit.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "VeriSec Audit Report v1",
+  "type": "object",
+  "required": ["schemaVersion", "auditId", "project", "auditor", "reportDate", "findings"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "const": "verisec.audit.v1"
+    },
+    "auditId": {
+      "type": "string",
+      "description": "Stable identifier for this audit report."
+    },
+    "project": {
+      "$ref": "#/$defs/Project"
+    },
+    "auditor": {
+      "$ref": "#/$defs/Auditor"
+    },
+    "reportDate": {
+      "type": "string",
+      "format": "date"
+    },
+    "commit": {
+      "type": "string"
+    },
+    "network": {
+      "type": "string"
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ipfsCid": { "type": "string" },
+        "reportUrl": { "type": "string", "format": "uri" }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/Finding" }
+    },
+    "signatures": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/Signature" }
+    },
+    "metadata": {
+      "type": "object"
+    }
+  },
+  "$defs": {
+    "Project": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "slug": { "type": "string" },
+        "repository": { "type": "string" },
+        "version": { "type": "string" },
+        "contractAddresses": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "Auditor": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "website": { "type": "string" },
+        "publicKey": { "type": "string" },
+        "identity": { "type": "string" }
+      }
+    },
+    "Finding": {
+      "type": "object",
+      "required": ["id", "title", "severity", "status"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "severity": {
+          "type": "string",
+          "enum": ["info", "low", "medium", "high", "critical"]
+        },
+        "status": {
+          "type": "string",
+          "enum": ["open", "mitigated", "resolved", "accepted"]
+        },
+        "description": { "type": "string" },
+        "category": { "type": "string" },
+        "cwe": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "affectedContracts": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "affectedAddresses": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "codeReferences": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/CodeReference" }
+        },
+        "recommendation": { "type": "string" },
+        "remediation": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "CodeReference": {
+      "type": "object",
+      "required": ["path"],
+      "additionalProperties": false,
+      "properties": {
+        "path": { "type": "string" },
+        "lineStart": { "type": "integer", "minimum": 1 },
+        "lineEnd": { "type": "integer", "minimum": 1 },
+        "commit": { "type": "string" }
+      }
+    },
+    "Signature": {
+      "type": "object",
+      "required": ["signer", "signature", "scheme"],
+      "additionalProperties": false,
+      "properties": {
+        "signer": { "type": "string" },
+        "signature": { "type": "string" },
+        "scheme": { "type": "string", "enum": ["eip191", "eip712", "pgp", "other"] },
+        "signedAt": { "type": "string", "format": "date-time" }
+      }
+    }
+  }
+}

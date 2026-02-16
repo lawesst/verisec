@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "verisec.audit.v1",
+  "auditId": "radiant-v3-pashov",
+  "project": {
+    "name": "Radiant Capital v3",
+    "slug": "radiant-v3",
+    "repository": "https://github.com/radiant-capital"
+  },
+  "auditor": {
+    "name": "Pashov Audit Group"
+  },
+  "reportDate": "2026-02-09",
+  "network": "arbitrum",
+  "artifacts": {
+    "reportUrl": "https://content.gitbook.com/content/c8CwAEN8ihh81y90gyG1/blobs/Yhgm3h0qq6vtZ4l707Rc/Radiant%20Security%20Review%20-%20Pashov%20Audit%20Group.pdf"
+  },
+  "findings": [
+    { "id": "RP-01", "title": "Missing state updates in case of fee-on-transfer" , "severity": "high", "status": "resolved" },
+    { "id": "RP-02", "title": "Possible reentrancy via malicious rewarder" , "severity": "medium", "status": "resolved" },
+    { "id": "RP-03", "title": "dLP token value is inflated due to suboptimal handling" , "severity": "medium", "status": "resolved" },
+    { "id": "RP-04", "title": "Unsafe use of ERC20 functions" , "severity": "medium", "status": "resolved" }
+  ],
+  "metadata": {
+    "source": "https://docs.radiant.capital/radiant/contracts-and-security/audits/v3-audits",
+    "reportTitle": "Pashov Audit Group - Radiant V3 Core and DLP Smart Contract Audit Report",
+    "reportDateNote": "Report date not present in PDF text extraction"
+  }
+}
