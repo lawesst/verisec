@@ -2,8 +2,8 @@
 
 import React, { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { canonicalAuditMessage } from "@verisec/schema";
-import type { AuditReport, Finding } from "@verisec/schema";
+import { canonicalAuditMessage } from "../lib/audit";
+import type { AuditReport, Finding } from "../lib/audit";
 
 interface AuditListItem {
   auditId: string;
@@ -86,7 +86,82 @@ const API_BASE_URL =
   process.env.NEXT_PUBLIC_VERISEC_API_BASE_URL ?? "http://localhost:4010";
 
 interface EthereumProvider {
+  providers?: EthereumProvider[];
+  isMetaMask?: boolean;
+  isRabby?: boolean;
+  isCoinbaseWallet?: boolean;
+  isBraveWallet?: boolean;
   request: (payload: { method: string; params?: unknown[] }) => Promise<unknown>;
+}
+
+function getInjectedProvider(): EthereumProvider | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const win = window as Window & {
+    ethereum?: EthereumProvider;
+    okxwallet?: { ethereum?: EthereumProvider };
+    phantom?: { ethereum?: EthereumProvider };
+    coinbaseWalletExtension?: EthereumProvider;
+  };
+
+  const candidates: EthereumProvider[] = [];
+  if (Array.isArray(win.ethereum?.providers)) {
+    candidates.push(...win.ethereum.providers);
+  }
+  if (win.ethereum) {
+    candidates.push(win.ethereum);
+  }
+  if (win.coinbaseWalletExtension) {
+    candidates.push(win.coinbaseWalletExtension);
+  }
+  if (win.okxwallet?.ethereum) {
+    candidates.push(win.okxwallet.ethereum);
+  }
+  if (win.phantom?.ethereum) {
+    candidates.push(win.phantom.ethereum);
+  }
+
+  return candidates.find((provider) => typeof provider?.request === "function") ?? null;
+}
+
+function toWalletErrorMessage(error: unknown): string {
+  const err = error as { code?: number; message?: string } | undefined;
+  if (!err) {
+    return "wallet_sign_failed";
+  }
+
+  if (err.code === 4001) {
+    return "Signature request was rejected in wallet.";
+  }
+  if (err.code === -32002) {
+    return "Wallet request already pending. Open your wallet and approve it.";
+  }
+
+  return err.message ?? "wallet_sign_failed";
+}
+
+async function requestPersonalSignature(
+  provider: EthereumProvider,
+  message: string,
+  signer: string
+): Promise<string> {
+  try {
+    return (await provider.request({
+      method: "personal_sign",
+      params: [message, signer]
+    })) as string;
+  } catch (firstError) {
+    try {
+      return (await provider.request({
+        method: "personal_sign",
+        params: [signer, message]
+      })) as string;
+    } catch {
+      throw firstError;
+    }
+  }
 }
 
 function buildUrl(path: string) {
@@ -481,10 +556,12 @@ function ClientPage({ auditParam }: { auditParam?: string }) {
       return;
     }
 
-    const provider = (window as Window & { ethereum?: EthereumProvider }).ethereum;
+    const provider = getInjectedProvider();
     if (!provider) {
       setSubmissionStatus("error");
-      setSubmissionError("No injected wallet found. Install MetaMask or Rabby.");
+      setSubmissionError(
+        "No wallet provider detected. Install MetaMask/Rabby/Coinbase Wallet (or open this page inside a wallet browser), then refresh."
+      );
       setWalletStatus("error");
       setWalletError("wallet_not_found");
       return;
@@ -500,10 +577,7 @@ function ClientPage({ auditParam }: { auditParam?: string }) {
       }
 
       const message = canonicalAuditMessage(parsedAudit);
-      const signature = (await provider.request({
-        method: "personal_sign",
-        params: [message, signer]
-      })) as string;
+      const signature = await requestPersonalSignature(provider, message, signer);
       const signedAt = new Date().toISOString();
 
       setSubmissionSigner(signer);
@@ -520,7 +594,7 @@ function ClientPage({ auditParam }: { auditParam?: string }) {
 
       setWalletStatus("success");
     } catch (error) {
-      const message = (error as Error).message || "wallet_sign_failed";
+      const message = toWalletErrorMessage(error);
       setSubmissionStatus("error");
       setSubmissionError(message);
       setWalletStatus("error");
@@ -835,12 +909,13 @@ function ClientPage({ auditParam }: { auditParam?: string }) {
                     type="text"
                     placeholder="0x..."
                     value={auditorForm.address}
-                    onChange={(event) =>
+                    onChange={(event) => {
+                      const value = event.currentTarget.value;
                       setAuditorForm((current) => ({
                         ...current,
-                        address: event.currentTarget.value
-                      }))
-                    }
+                        address: value
+                      }));
+                    }}
                     required
                   />
                 </label>
@@ -851,12 +926,13 @@ function ClientPage({ auditParam }: { auditParam?: string }) {
                     type="text"
                     placeholder="OpenZeppelin"
                     value={auditorForm.name}
-                    onChange={(event) =>
+                    onChange={(event) => {
+                      const value = event.currentTarget.value;
                       setAuditorForm((current) => ({
                         ...current,
-                        name: event.currentTarget.value
-                      }))
-                    }
+                        name: value
+                      }));
+                    }}
                     required
                   />
                 </label>
@@ -867,12 +943,13 @@ function ClientPage({ auditParam }: { auditParam?: string }) {
                     type="text"
                     placeholder="https://example.com"
                     value={auditorForm.website}
-                    onChange={(event) =>
+                    onChange={(event) => {
+                      const value = event.currentTarget.value;
                       setAuditorForm((current) => ({
                         ...current,
-                        website: event.currentTarget.value
-                      }))
-                    }
+                        website: value
+                      }));
+                    }}
                   />
                 </label>
                 <label className="field">
@@ -882,12 +959,13 @@ function ClientPage({ auditParam }: { auditParam?: string }) {
                     type="text"
                     placeholder="@auditor"
                     value={auditorForm.identity}
-                    onChange={(event) =>
+                    onChange={(event) => {
+                      const value = event.currentTarget.value;
                       setAuditorForm((current) => ({
                         ...current,
-                        identity: event.currentTarget.value
-                      }))
-                    }
+                        identity: value
+                      }));
+                    }}
                   />
                 </label>
                 <label className="field">
@@ -897,24 +975,26 @@ function ClientPage({ auditParam }: { auditParam?: string }) {
                     type="text"
                     placeholder="0x..."
                     value={auditorForm.publicKey}
-                    onChange={(event) =>
+                    onChange={(event) => {
+                      const value = event.currentTarget.value;
                       setAuditorForm((current) => ({
                         ...current,
-                        publicKey: event.currentTarget.value
-                      }))
-                    }
+                        publicKey: value
+                      }));
+                    }}
                   />
                 </label>
                 <label className="checkbox-row">
                   <input
                     type="checkbox"
                     checked={auditorForm.active}
-                    onChange={(event) =>
+                    onChange={(event) => {
+                      const checked = event.currentTarget.checked;
                       setAuditorForm((current) => ({
                         ...current,
-                        active: event.currentTarget.checked
-                      }))
-                    }
+                        active: checked
+                      }));
+                    }}
                   />
                   <span>Active auditor</span>
                 </label>

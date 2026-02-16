@@ -9,6 +9,8 @@
   "scripts": {
     "build": "echo \"TODO: wire build\"",
     "dev": "echo \"TODO: wire dev\"",
-    "test": "echo \"TODO: wire tests\""
+    "test": "echo \"TODO: wire tests\"",
+    "build:api": "npm run build -w @verisec/schema && npm run build -w @verisec/api",
+    "start:api": "node apps/api/dist/index.js"
   }
 }

@@ -1,0 +1,18 @@
+<svg width="320" height="320" viewBox="0 0 320 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="iconShield" x1="58" y1="36" x2="262" y2="278" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0F766E"/>
+      <stop offset="1" stop-color="#1D4ED8"/>
+    </linearGradient>
+    <linearGradient id="iconAccent" x1="111" y1="100" x2="202" y2="207" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#34D399"/>
+      <stop offset="1" stop-color="#22D3EE"/>
+    </linearGradient>
+  </defs>
+
+  <path d="M160 26L262 72V150C262 213 222 266 160 297C98 266 58 213 58 150V72L160 26Z" fill="url(#iconShield)"/>
+  <path d="M160 57L235 91V150C235 200 205 241 160 267C115 241 85 200 85 150V91L160 57Z" fill="#0B1B2B" fill-opacity="0.22"/>
+  <path d="M112 158L145 191L210 121" stroke="#F8FAFC" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M214 199C225.046 199 234 190.046 234 179C234 167.954 225.046 159 214 159H199C187.954 159 179 167.954 179 179C179 190.046 187.954 199 199 199H214Z" fill="url(#iconAccent)"/>
+  <path d="M133 133C144.046 133 153 124.046 153 113C153 101.954 144.046 93 133 93H118C106.954 93 98 101.954 98 113C98 124.046 106.954 133 118 133H133Z" fill="#93C5FD"/>
+</svg>

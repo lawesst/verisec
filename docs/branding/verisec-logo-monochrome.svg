@@ -1,0 +1,14 @@
+<svg width="1200" height="320" viewBox="0 0 1200 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <g>
+    <path d="M138 24L232 66V138C232 196 196 245 138 274C80 245 44 196 44 138V66L138 24Z" fill="#0F172A"/>
+    <path d="M138 52L206 82V138C206 183 179 221 138 244C97 221 70 183 70 138V82L138 52Z" fill="#FFFFFF" fill-opacity="0.12"/>
+    <path d="M94 145L124 175L184 111" stroke="#FFFFFF" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M188 182C199.046 182 208 173.046 208 162C208 150.954 199.046 142 188 142H173C161.954 142 153 150.954 153 162C153 173.046 161.954 182 173 182H188Z" fill="#FFFFFF"/>
+    <path d="M111 120C122.046 120 131 111.046 131 100C131 88.9543 122.046 80 111 80H96C84.9543 80 76 88.9543 76 100C76 111.046 84.9543 120 96 120H111Z" fill="#CBD5E1"/>
+  </g>
+
+  <g>
+    <text x="288" y="145" fill="#0F172A" font-family="Space Grotesk, Inter, system-ui, sans-serif" font-size="102" font-weight="700" letter-spacing="-2">VeriSec</text>
+    <text x="292" y="194" fill="#334155" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="30" font-weight="500" letter-spacing="1">Verifiable Security Data Oracle</text>
+  </g>
+</svg>

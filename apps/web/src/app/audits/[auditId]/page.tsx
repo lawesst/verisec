@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import React from "react";
-import type { AuditReport, Finding } from "@verisec/schema";
+import type { AuditReport, Finding } from "../../../lib/audit";
 
 interface Pagination {
   limit: number;

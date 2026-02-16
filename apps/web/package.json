@@ -3,14 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "predev": "npm run build -w @verisec/schema",
     "dev": "next dev -p 3005",
-    "prebuild": "npm run build -w @verisec/schema",
     "build": "next build",
     "start": "next start -p 3005"
   },
   "dependencies": {
-    "@verisec/schema": "*",
     "next": "14.1.0",
     "react": "18.2.0",
     "react-dom": "18.2.0"
