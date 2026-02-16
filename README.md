@@ -1,62 +1,30 @@
 # VeriSec
 
-VeriSec converts smart contract audit reports into structured, cryptographically verifiable, and composable security data for Arbitrum.
+VeriSec turns smart contract audit reports into structured, verifiable security data.
 
-The project provides:
-- A REST API for audit ingestion, querying, Merkle proof generation, and on-chain anchoring
-- A web explorer for live audit/finding/anchor visibility
-- A canonical schema package shared across services
-- A lightweight `SecurityAnchor` contract
+## Repo
 
-## Repository Layout
+- `apps/api` REST API + MySQL + proof + anchor endpoints
+- `apps/web` Explorer UI
+- `packages/schema` Shared schema/types
+- `contracts` `SecurityAnchor` contract
 
-- `apps/api` Fastify API + MySQL persistence + Merkle proofs + anchor integration
-- `apps/web` Next.js explorer UI
-- `packages/schema` Canonical schema and shared TypeScript types
-- `packages/sdk` SDK scaffold
-- `contracts` Hardhat project with `SecurityAnchor.sol`
-- `docs` Architecture and schema notes
+## Quick Start
 
-## Current Status
-
-Implemented:
-- Audit ingestion and JSON schema validation
-- MySQL storage with auto-migrate on boot
-- Findings listing with pagination
-- Merkle root/proof generation and proof endpoint
-- On-chain anchor endpoint + anchor history endpoint
-- Explorer UI with live API data and anchor status/action panel
-- Seed fixtures (sample + real audits)
-
-Not implemented yet:
-- Auditor registry flows
-- GraphQL/webhooks
-- Full automated test suite and CI hardening
-
-## Prerequisites
-
-- Node.js 20+
-- npm 10+
-- Docker Desktop (for local MySQL)
-
-## Local Setup
-
-### 1. Install dependencies
+1. Install dependencies
 
 ```bash
 cd "/Users/vicgunga/Documents/New project"
 npm install
 ```
 
-### 2. Start MySQL (Docker)
-
-If container already exists:
+2. Start MySQL
 
 ```bash
 docker start verisec-mysql
 ```
 
-If not created yet:
+If container does not exist yet:
 
 ```bash
 docker run --name verisec-mysql \
@@ -66,7 +34,7 @@ docker run --name verisec-mysql \
   -d mysql:8
 ```
 
-### 3. Configure environment files
+3. Create env files
 
 `apps/api/.env.local`
 
@@ -79,10 +47,12 @@ DB_PASSWORD=verisec
 DB_NAME=verisec
 DB_AUTO_MIGRATE=true
 CORS_ORIGIN=http://localhost:3005
-ANCHOR_RPC_URL=https://sepolia-rollup.arbitrum.io/rpc
-ANCHOR_PRIVATE_KEY=0xYOUR_KEY
-ANCHOR_CONTRACT_ADDRESS=0x9b5E880FA18b1d31b44fa736f2eaeD9013E2a36C
-ANCHOR_CHAIN_ID=421614
+
+# Optional: required only for on-chain anchoring
+ANCHOR_RPC_URL=
+ANCHOR_PRIVATE_KEY=
+ANCHOR_CONTRACT_ADDRESS=
+ANCHOR_CHAIN_ID=
 ```
 
 `apps/web/.env.local`
@@ -92,23 +62,21 @@ PORT=3005
 NEXT_PUBLIC_VERISEC_API_BASE_URL=http://localhost:4010
 ```
 
-### 4. Run API
+4. Start API
 
 ```bash
 cd "/Users/vicgunga/Documents/New project/apps/api"
 npm run dev
 ```
 
-### 5. Seed data
+5. Seed audits
 
 ```bash
 cd "/Users/vicgunga/Documents/New project/apps/api"
 npm run seed:all
-# or refresh existing seeded audits
-npm run seed:refresh
 ```
 
-### 6. Run web
+6. Start web
 
 ```bash
 cd "/Users/vicgunga/Documents/New project/apps/web"
@@ -116,13 +84,11 @@ npm run dev
 ```
 
 Open:
-- Web: `http://localhost:3005`
-- API health: `http://localhost:4010/health`
+- `http://localhost:3005`
+- `http://localhost:4010/health`
 
-## API Endpoints
+## Main API Routes
 
-- `GET /health`
-- `GET /v1/schema`
 - `GET /v1/audits`
 - `POST /v1/audits`
 - `GET /v1/audits/:auditId`
@@ -130,45 +96,3 @@ Open:
 - `GET /v1/audits/:auditId/findings/:findingId/proof`
 - `POST /v1/audits/:auditId/anchor`
 - `GET /v1/audits/:auditId/anchors`
-
-Anchor example:
-
-```bash
-curl -X POST "http://localhost:4010/v1/audits/camelot-router-bailsec/anchor" \
-  -H "content-type: application/json" \
-  -d '{"uri":"ipfs://example"}'
-```
-
-## Contract Deployment
-
-From `contracts`:
-
-```bash
-cd "/Users/vicgunga/Documents/New project/contracts"
-npm install
-
-export ARB_RPC_URL="https://sepolia-rollup.arbitrum.io/rpc"
-export DEPLOYER_PRIVATE_KEY="0xYOUR_KEY"
-npm run deploy:sepolia
-```
-
-For Arbitrum One:
-
-```bash
-export ARB_ONE_RPC_URL="https://arb1-rpc"
-export DEPLOYER_PRIVATE_KEY="0xYOUR_KEY"
-npm run deploy:arb
-```
-
-## Notes
-
-- Do not commit private keys or `.env.local` files.
-- If you see `anchor_config_missing`, check `ANCHOR_*` vars and restart API.
-- If you see `ECONNREFUSED 127.0.0.1:3307`, MySQL container is not running.
-- If ports are busy, inspect with `lsof -nP -iTCP:<port> -sTCP:LISTEN`.
-
-## Documentation
-
-- `docs/ARCHITECTURE.md`
-- `docs/SCHEMA.md`
-- `packages/schema/schema/v1/audit.schema.json`
