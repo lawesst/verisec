@@ -7,10 +7,22 @@
     "contracts"
   ],
   "scripts": {
-    "build": "echo \"TODO: wire build\"",
-    "dev": "echo \"TODO: wire dev\"",
-    "test": "echo \"TODO: wire tests\"",
+    "bootstrap:env": "node scripts/bootstrap-env.mjs",
+    "infra:up": "docker start verisec-mysql >/dev/null 2>&1 || docker compose up -d mysql",
+    "infra:down": "docker stop verisec-mysql >/dev/null 2>&1 || true",
+    "infra:logs": "docker compose logs -f mysql",
+    "dev:api": "npm run dev -w @verisec/api",
+    "dev:web": "npm run dev -w @verisec/web",
+    "dev": "concurrently -n api,web -c cyan,magenta \"npm:dev:api\" \"npm:dev:web\"",
+    "build": "npm run build -w @verisec/schema && npm run build -w @verisec/api && npm run build -w @verisec/web",
+    "test": "npm run test -w @verisec/api",
+    "seed": "npm run seed:refresh -w @verisec/api",
+    "smoke": "node scripts/e2e-smoke.mjs",
+    "e2e": "node scripts/e2e-run.mjs",
     "build:api": "npm run build -w @verisec/schema && npm run build -w @verisec/api",
     "start:api": "node apps/api/dist/index.js"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
   }
 }

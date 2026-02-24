@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { getAuditValidator } from "./validation.js";
 import { deleteAudit, insertAudit } from "./storage.js";
 import type { AuditReport } from "@verisec/schema";
+import { pool } from "./db.js";
 
 async function main() {
   const args = new Set(process.argv.slice(2));
@@ -69,7 +70,11 @@ async function seedFile(filePath: string, refresh: boolean) {
   console.log(`Seeded audit: ${payload.auditId}`);
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+main()
+  .catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+  })
+  .finally(async () => {
+    await pool.end();
+  });

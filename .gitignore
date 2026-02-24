@@ -6,6 +6,8 @@ coverage
 .env.local
 .next
 .DS_Store
+.tmp
+docs/branding/*-pack.zip
 
 # App-specific env files
 apps/*/.env.local

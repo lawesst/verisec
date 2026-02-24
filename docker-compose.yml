@@ -1,0 +1,20 @@
+services:
+  mysql:
+    image: mysql:8
+    container_name: verisec-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: verisec
+      MYSQL_DATABASE: verisec
+    ports:
+      - "3307:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-pverisec"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    volumes:
+      - verisec-mysql-data:/var/lib/mysql
+
+volumes:
+  verisec-mysql-data:

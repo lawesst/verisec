@@ -52,7 +52,13 @@ flowchart LR
 npm install
 ```
 
-### 2) Start MySQL (Docker)
+### 2) Bootstrap local env files (first run)
+
+```bash
+npm run bootstrap:env
+```
+
+### 3) Start MySQL (Docker)
 
 If container already exists:
 
@@ -70,7 +76,13 @@ docker run --name verisec-mysql \
   -d mysql:8
 ```
 
-### 3) Configure environment files
+Or with compose:
+
+```bash
+npm run infra:up
+```
+
+### 4) Configure environment files
 
 `apps/api/.env.local`
 
@@ -98,7 +110,7 @@ PORT=3005
 NEXT_PUBLIC_VERISEC_API_BASE_URL=http://localhost:4010
 ```
 
-### 4) Start services
+### 5) Start services
 
 API:
 
@@ -119,11 +131,32 @@ Open:
 - `http://localhost:3005`
 - `http://localhost:4010/health`
 
-### 5) Seed sample audits
+### 6) Seed sample audits
 
 ```bash
 cd apps/api
 npm run seed:refresh
+```
+
+## End-to-End Run (Local)
+
+One-time setup:
+
+```bash
+npm install
+npm run bootstrap:env
+```
+
+Run full local E2E smoke (infra + seed + API boot + endpoint checks):
+
+```bash
+npm run e2e
+```
+
+Run API + Web together:
+
+```bash
+npm run dev
 ```
 
 ## API Surface (Core)
@@ -154,6 +187,13 @@ Web build check:
 ```bash
 cd apps/web
 npm run build
+```
+
+Root shortcuts:
+
+```bash
+npm run build
+npm run test
 ```
 
 ## Deployment
